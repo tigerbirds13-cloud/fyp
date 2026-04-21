@@ -1,0 +1,31 @@
+{
+  "name": "fyp-mern",
+  "version": "1.0.0",
+  "description": "A MERN Stack Application",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "start:clean": "pids=$(lsof -tiTCP:3000 -sTCP:LISTEN; lsof -tiTCP:5002 -sTCP:LISTEN | cat); if [ -n \"$pids\" ]; then echo \"$pids\" | xargs kill -9; fi; npm start",
+    "server": "cd backend && npm start",
+    "client": "cd frontend && npm start",
+    "build": "cd frontend && npm run build",
+    "seed:data": "cd backend && npm run seed:sample-data"
+  },
+  "keywords": [
+    "mern",
+    "mongodb",
+    "express",
+    "react",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "dependencies": {
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "nodemailer": "^8.0.5"
+  }
+}

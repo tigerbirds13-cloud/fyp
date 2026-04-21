@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Backend Server",
+            "program": "${workspaceFolder}/backend/server.js",
+            "cwd": "${workspaceFolder}/backend",
+            "internalConsoleOptions": "neverOpen"
+        }
+    ]
+}

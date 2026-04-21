@@ -1,0 +1,398 @@
+openapi: 3.1.0
+info:
+  title: HelperSeeker Profile Module API
+  version: 1.0.0
+  description: |
+    REST API for user profile, company settings, documents, billing, notifications, security, activity, and public profile.
+servers:
+  - url: http://localhost:5000/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        phone:
+          type: string
+        emailVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    ProfileData:
+      type: object
+      properties:
+        headline:
+          type: string
+        bio:
+          type: string
+        timezone:
+          type: string
+        locale:
+          type: string
+        address:
+          type: object
+          properties:
+            line1: { type: string }
+            line2: { type: string }
+            city: { type: string }
+            region: { type: string }
+            postcode: { type: string }
+            country: { type: string }
+        publicProfile:
+          type: object
+          properties:
+            visible: { type: boolean }
+            handle: { type: string }
+    CompanyData:
+      type: object
+      properties:
+        name: { type: string }
+        role: { type: string }
+        website: { type: string }
+        industry: { type: string }
+        teamSize: { type: string }
+        about: { type: string }
+        social:
+          type: object
+          properties:
+            linkedIn: { type: string }
+            x: { type: string }
+            website: { type: string }
+    DocumentMetadata:
+      type: object
+      properties:
+        key: { type: string }
+        filename: { type: string }
+        mime: { type: string }
+        size: { type: integer }
+        tags:
+          type: array
+          items:
+            type: string
+    NotificationPreference:
+      type: object
+      properties:
+        channel:
+          type: string
+          enum: [email, in_app, sms]
+        topic:
+          type: string
+        enabled:
+          type: boolean
+        frequency:
+          type: string
+          enum: [immediate, daily, weekly, none]
+    ApiKeyResponse:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        prefix: { type: string }
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+    SignedUpload:
+      type: object
+      properties:
+        key: { type: string }
+        uploadUrl: { type: string }
+        expiresIn:
+          type: integer
+          description: seconds until URL expires
+paths:
+  /profile:
+    get:
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+    put:
+      summary: Update user profile and account settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                phone: { type: string }
+                headline: { type: string }
+                bio: { type: string }
+                timezone: { type: string }
+                locale: { type: string }
+                address:
+                  type: object
+                  properties:
+                    line1: { type: string }
+                    line2: { type: string }
+                    city: { type: string }
+                    region: { type: string }
+                    postcode: { type: string }
+                    country: { type: string }
+                publicProfile:
+                  type: object
+                  properties:
+                    visible: { type: boolean }
+                    handle: { type: string }
+      responses:
+        '200':
+          description: Profile updated
+  /profile/avatar:
+    post:
+      summary: Request a signed avatar upload URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename: { type: string }
+                mimeType: { type: string }
+      responses:
+        '200':
+          description: Signed avatar upload data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedUpload'
+  /profile/cover:
+    post:
+      summary: Request a signed cover image upload URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename: { type: string }
+                mimeType: { type: string }
+      responses:
+        '200':
+          description: Signed cover upload data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedUpload'
+  /profile/documents:
+    get:
+      summary: List user documents
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: tag
+          schema:
+            type: string
+        - in: query
+          name: sort
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Documents list
+    post:
+      summary: Create or version a document record
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentMetadata'
+      responses:
+        '201':
+          description: Document stored
+  /profile/documents/{id}:
+    delete:
+      summary: Soft delete a document
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document deleted
+  /profile/notification-preferences:
+    get:
+      summary: Get notification preferences
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notification preferences
+    post:
+      summary: Update notification preferences
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPreference'
+      responses:
+        '200':
+          description: Preference updated
+  /profile/change-email:
+    post:
+      summary: Start email change verification flow
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+      responses:
+        '200':
+          description: Verification email sent
+  /profile/change-password:
+    post:
+      summary: Change current user password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string }
+      responses:
+        '200':
+          description: Password updated
+  /profile/security/sessions:
+    get:
+      summary: List active sessions and devices
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Active sessions
+  /profile/security/sessions/{id}:
+    delete:
+      summary: Revoke a session
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session revoked
+  /profile/security/api-keys:
+    get:
+      summary: List API keys
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: API keys list
+    post:
+      summary: Create an API key
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+      responses:
+        '201':
+          description: API key created
+  /profile/security/api-keys/{id}:
+    delete:
+      summary: Revoke an API key
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API key revoked
+  /profile/activity/audit-logs:
+    get:
+      summary: Get user audit logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: action
+          schema:
+            type: string
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Audit logs retrieved
+  /profile/public-profile/preview:
+    get:
+      summary: Preview public profile data
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Public profile preview
